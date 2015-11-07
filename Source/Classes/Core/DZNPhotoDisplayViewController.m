@@ -71,6 +71,9 @@ static CGFloat kDZNPhotoDisplayMinimumBarHeight = 44.0;
     return self;
 }
 
+- (BOOL)prefersStatusBarHidden {
+    return YES;
+}
 
 #pragma mark - View lifecycle
 
