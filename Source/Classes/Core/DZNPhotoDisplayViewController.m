@@ -528,14 +528,16 @@ Returns the custom collection view layout.
                                                           options:SDWebImageCacheMemoryOnly|SDWebImageProgressiveDownload|SDWebImageRetryFailed
                                                          progress:NULL
                                                         completed:^(UIImage *image, NSError *error, SDImageCacheType cacheType, NSURL *imageURL) {
-                                                            if (!error) {
-                                                                _controller.rightButton.enabled = YES;
-                                                            }
-                                                            else {
-                                                                [[NSNotificationCenter defaultCenter] postNotificationName:DZNPhotoPickerDidFailPickingNotification object:nil userInfo:@{@"error": error}];
-                                                            }
-                                                            
-                                                            [_controller.activityIndicator stopAnimating];
+                                                        dispatch_async(dispatch_get_main_queue(), ^{
+																if (!error) {
+																	_controller.rightButton.enabled = YES;
+																}
+																else {
+																	[[NSNotificationCenter defaultCenter] postNotificationName:DZNPhotoPickerDidFailPickingNotification object:nil userInfo:@{@"error": error}];
+																}
+															
+																[_controller.activityIndicator stopAnimating];
+															});
                                                         }];
     }
     else {
@@ -553,17 +555,19 @@ Returns the custom collection view layout.
                                                               options:SDWebImageCacheMemoryOnly|SDWebImageRetryFailed
                                                              progress:NULL
                                                             completed:^(UIImage *image, NSData *data, NSError *error, BOOL finished){
-                                                                if (image) {
-                                                                    
-                                                                    NSDictionary *userInfo = @{UIImagePickerControllerOriginalImage: image};
-                                                                    [metadata postMetadataUpdate:userInfo];
-                                                                }
-                                                                else {
-                                                                    [self setLoadingError:error];
-                                                                }
-                                                                
-                                                                [hud hide:YES];
-                                                                [self setActivityIndicatorsVisible:NO];
+                                                            	dispatch_async(dispatch_get_main_queue(), ^{
+																	if (image) {
+																	
+																		NSDictionary *userInfo = @{UIImagePickerControllerOriginalImage: image};
+																		[metadata postMetadataUpdate:userInfo];
+																	}
+																	else {
+																		[self setLoadingError:error];
+																	}
+																
+																	[hud hide:YES];
+																	[self setActivityIndicatorsVisible:NO];
+																});
                                                             }];
     }
     
