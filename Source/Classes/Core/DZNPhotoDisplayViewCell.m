@@ -11,6 +11,10 @@
 #import "DZNPhotoDisplayViewCell.h"
 #import "UIImageView+WebCache.h"
 
+@interface UIImageView (PrivateAdditions)
+- (void)mhr_setImageWithURL:(NSURL *)url;
+@end
+
 @implementation DZNPhotoDisplayViewCell
 @synthesize imageView = _imageView;
 
@@ -49,11 +53,14 @@
 - (void)setThumbURL:(NSURL *)URL
 {
     [self.imageView sd_cancelCurrentImageLoad];
-    
-    [self.imageView sd_setImageWithURL:URL
-                      placeholderImage:nil
-                               options:SDWebImageCacheMemoryOnly
-                             completed:NULL];
+    if ([self.imageView respondsToSelector:@selector(mhr_setImageWithURL:)]) {
+        [self.imageView mhr_setImageWithURL:URL];
+    } else {
+        [self.imageView sd_setImageWithURL:URL
+                          placeholderImage:nil
+                                   options:SDWebImageCacheMemoryOnly
+                                 completed:NULL];
+    }
 }
 
 

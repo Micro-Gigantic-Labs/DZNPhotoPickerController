@@ -11,7 +11,7 @@
 #import <Foundation/Foundation.h>
 #import "DZNPhotoPickerControllerConstants.h"
 
-typedef void (^DZNHTTPRequestCompletion)(NSArray *list, NSError *error);
+typedef void (^DZNHTTPRequestCompletion)(NSArray *list, NSError *error, BOOL didLoadAllResults);
 
 /**
  Base HTTP photo service protocol.

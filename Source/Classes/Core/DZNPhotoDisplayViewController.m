@@ -44,7 +44,7 @@ static CGFloat kDZNPhotoDisplayMinimumBarHeight = 44.0;
 @property (nonatomic) NSInteger resultPerPage;
 @property (nonatomic) NSInteger currentPage;
 @property (nonatomic, readonly) NSTimer *searchTimer;
-
+@property (nonatomic) BOOL didLoadAllResults;
 @end
 
 @implementation DZNPhotoDisplayViewController
@@ -229,7 +229,7 @@ Returns the custom collection view layout.
 {
     if (!_activityIndicator)
     {
-        _activityIndicator = [[UIActivityIndicatorView alloc] init];
+        _activityIndicator = [[UIActivityIndicatorView alloc] initWithFrame:CGRectMake(0, 0, self.view.bounds.size.width, 50)];
         _activityIndicator.autoresizingMask = UIViewAutoresizingFlexibleHeight|UIViewAutoresizingFlexibleWidth;
     }
     return _activityIndicator;
@@ -366,7 +366,7 @@ Returns the custom collection view layout.
 - (BOOL)canDisplayFooterView
 {
     if (_metadataList.count > 0) {
-        return (_metadataList.count%self.resultPerPage == 0) ? YES : NO;
+        return !self.didLoadAllResults;
     }
     return self.loading;
 }
@@ -385,14 +385,16 @@ Returns the custom collection view layout.
 /*
  Sets the current photo search response and refreshs the collection view.
  */
-- (void)setPhotoSearchList:(NSArray *)list
+- (void)setPhotoSearchList:(NSArray *)list didLoadAllResults:(BOOL)didLoadAllResults
 {
     [self setActivityIndicatorsVisible:NO];
     
     if (!_metadataList) _metadataList = [NSMutableArray new];
     
     [_metadataList addObjectsFromArray:list];
-    
+
+    self.didLoadAllResults = didLoadAllResults;
+
     [self.collectionView reloadData];
 //    [self.collectionView reloadDataSetIfNeeded];
     
@@ -592,7 +594,7 @@ Returns the custom collection view layout.
     [UIApplication sharedApplication].networkActivityIndicatorVisible = YES;
 
     [client searchTagsWithKeyword:term
-                       completion:^(NSArray *list, NSError *error) {
+                       completion:^(NSArray *list, NSError *error, BOOL didLoadAllResults) {
                            if (error) [self setLoadingError:error];
                            else [self setTagSearchList:list];
                        }];
@@ -625,9 +627,9 @@ Returns the custom collection view layout.
     [self.selectedServiceClient searchPhotosWithKeyword:keyword
                                                    page:_currentPage
                                           resultPerPage:self.resultPerPage
-                                             completion:^(NSArray *list, NSError *error) {
+                                             completion:^(NSArray *list, NSError *error, BOOL didLoadAllResults) {
                                                  if (error) [self setLoadingError:error];
-                                                 else [self setPhotoSearchList:list];
+                                                 else [self setPhotoSearchList:list didLoadAllResults:didLoadAllResults];
                                              }];
 }
 
@@ -1064,7 +1066,7 @@ Returns the custom collection view layout.
 
 #pragma mark - View Auto-Rotation
 
-- (NSUInteger)supportedInterfaceOrientations
+- (UIInterfaceOrientationMask)supportedInterfaceOrientations
 {
     return UIInterfaceOrientationMaskPortrait;
 }

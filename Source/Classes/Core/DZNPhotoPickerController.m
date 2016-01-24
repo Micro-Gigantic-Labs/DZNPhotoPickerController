@@ -154,7 +154,7 @@ static DZNPhotoPickerControllerCancellationBlock _cancellationBlock;
  */
 - (void)showPhotoDisplayController
 {
-    [self setViewControllers:nil];
+    [self setViewControllers:[NSArray array]];
     
     DZNPhotoDisplayViewController *controller = [[DZNPhotoDisplayViewController alloc] init];
     
@@ -241,7 +241,7 @@ static DZNPhotoPickerControllerCancellationBlock _cancellationBlock;
 
 #pragma mark - View Auto-Rotation
 
-- (NSUInteger)supportedInterfaceOrientations
+- (UIInterfaceOrientationMask)supportedInterfaceOrientations
 {
     return UIInterfaceOrientationMaskPortrait;
 }

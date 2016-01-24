@@ -215,7 +215,7 @@
     return data;
 }
 
-- (NSArray *)parseObjects:(Class)class withJSON:(NSDictionary *)json
+- (NSArray *)parseObjects:(Class)class withJSON:(NSDictionary *)json outDidLoadAllResults:(BOOL *)didLoadAllResults
 {
     NSString *keyPath = keyPathForObjectName(self.service, [class name]);
     NSMutableArray *objects = [NSMutableArray arrayWithArray:[json valueForKeyPath:keyPath]];
@@ -225,11 +225,25 @@
         if (self.service == DZNPhotoPickerControllerServiceFlickr) {
             NSString *keyword = [json valueForKeyPath:@"tags.source"];
             if (keyword) [objects insertObject:@{keyForSearchTagContent(self.service):keyword} atIndex:0];
+            
         }
         
         return [DZNPhotoTag photoTagListFromService:self.service withResponse:objects];
     }
     else if ([[class name] isEqualToString:[DZNPhotoMetadata name]]) {
+        if (self.service == DZNPhotoPickerControllerService500px) {
+            if (didLoadAllResults) {
+                NSUInteger currentPage = [json[@"current_page"] intValue];
+                NSUInteger pageCount = [json[@"total_pages"] intValue];
+                *didLoadAllResults = pageCount > 0 && currentPage >= pageCount;
+            }
+        } else if (self.service == DZNPhotoPickerControllerServiceFlickr) {
+            NSDictionary *photos = json[@"photos"];
+            NSUInteger currentPage = [photos[@"page"] intValue];
+            NSUInteger pageCount = [photos[@"pages"] intValue];
+            *didLoadAllResults = pageCount > 0 && currentPage >= pageCount;
+        }
+
         return [DZNPhotoMetadata metadataListWithResponse:objects service:self.service];
     }
     
@@ -282,7 +296,7 @@
                            }
                            else {
                                _loading = NO;
-                               if (completion) completion(nil, error);
+                               if (completion) completion(nil, error, YES);
                            }
                        }];
         return;
@@ -304,12 +318,15 @@
           NSDictionary *json = [NSJSONSerialization JSONObjectWithData:data options:NSJSONReadingMutableLeaves | NSJSONReadingAllowFragments error:nil];
           
           _loading = NO;
-          if (completion) completion([self parseObjects:class withJSON:json], nil);
-          
+          if (completion) {
+              BOOL didLoadAllResults = NO;
+              NSArray *items = [self parseObjects:class withJSON:json outDidLoadAllResults:&didLoadAllResults];
+              completion(items, nil, didLoadAllResults);
+          }
       } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
           
           _loading = NO;
-          if (completion) completion(nil, error);
+          if (completion) completion(nil, error, NO);
       }];
 }
 
